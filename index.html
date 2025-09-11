@@ -68,14 +68,13 @@
 
     /* Fixed-width milliseconds to prevent jitter */
     #milliseconds {
-      font-size: 30%;          
+      font-size: 30%;
       margin-left: 0.1em;
-      align-self: flex-end;    
-      display: inline-block;   
-      font-family: monospace;  /* ensure fixed width digits */
+      align-self: flex-end;
+      display: inline-block;
+      min-width: 1.5em;   /* reserve enough space for 2 digits with current font */
       text-align: left;
     }
-
     #podcast {
       margin-top: 10px;
       font-size: 6vw;
