@@ -45,30 +45,24 @@
       display: none;
     }
     #time {
-      display: inline-flex;
-      align-items: flex-end; /* align bottom */
+      position: relative;       /* parent for absolute positioning */
       font-size: 20vw;
       margin-top: 8vh;
-      font-family: 'Roboto', sans-serif;
-      line-height: 1;
-      letter-spacing: 0.05em;
-      overflow: hidden;
-      white-space: nowrap;
-      position: relative;
+      display: inline-block;
+      font-family: 'Roboto', sans-serif; /* will be overridden by font switcher */
     }
+    
     #mainTime {
       display: inline-block;
-      text-align: right; /* Ensure consistent alignment */
-      min-width: 3.5ch; /* Fixed width for "00:00" format */
     }
+    
     #milliseconds {
+      position: absolute;
+      bottom: 0;                /* align baseline with mainTime */
+      left: 100%;               /* place it right next to mainTime */
       font-size: 30%;
-      margin-left: 0.1em;
-      align-self: flex-end;
-      position: relative;
-      bottom: 0.1em;
-      min-width: 2.5ch; /* Fixed width for ".00" format */
-      text-align: left; /* Ensure consistent alignment */
+      margin-left: 0.05em;
+      display: inline-block;
     }
     /* Add a wrapper to enforce monospace for consistent digit width */
     .digit {
