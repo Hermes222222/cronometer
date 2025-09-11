@@ -58,10 +58,14 @@
       line-height: 1;
       letter-spacing: 0.05em;
       white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+      font-feature-settings: 'tnum';
     }
 
     #mainTime {
       display: inline-block;
+      min-width: 5ch;
+      text-align: right;
     }
 
     /* Absolutely position milliseconds to avoid jitter */
@@ -72,6 +76,8 @@
       font-size: 30%;
       margin-left: 0.05em;
       display: inline-block;
+      min-width: 2.5ch;
+      text-align: left;
     }
 
     #podcast {
