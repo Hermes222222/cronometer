@@ -6,22 +6,16 @@
   <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@700&family=Montserrat:wght@400&display=swap" rel="stylesheet">
   
-  <!-- Local fonts (place .ttf files in fonts/ folder at repo root) -->
+  <!-- Local fonts (place .ttf files in same folder as this HTML) -->
   <style>
     @font-face {
       font-family: 'Digital-7';
-      src: url('fonts/digital-7.ttf') format('truetype');
-      font-weight: normal;
-      font-style: normal;
-      font-display: swap;
+      src: url('digital-7.ttf') format('truetype');
     }
 
     @font-face {
       font-family: 'Technology';
-      src: url('fonts/technology.ttf') format('truetype');
-      font-weight: normal;
-      font-style: normal;
-      font-display: swap;
+      src: url('technology.ttf') format('truetype');
     }
 
     html, body {
@@ -37,6 +31,7 @@
       transition: margin-top 0.3s ease;
     }
 
+    /* when running, shift content down */
     body.running-mode {
       margin-top: 100px;
     }
@@ -49,27 +44,37 @@
       display: none;
     }
 
+    /* clock wrapper */
     #time {
+      display: inline-flex;
+      align-items: flex-end; /* align numbers at the bottom */
       font-size: 20vw;
       margin-top: 8vh;
       font-family: 'Roboto', sans-serif;
-      white-space: nowrap;
       line-height: 1;
       letter-spacing: 0.05em;
       overflow: hidden;
-      text-overflow: clip;
+      white-space: nowrap;
+      position: relative;
     }
 
-    #time small {
-      font-size: 40%;
-      vertical-align: baseline;
+    #mainTime {
+      display: inline-block;
+    }
+
+    #milliseconds {
+      font-size: 30%; /* always smaller */
+      margin-left: 0.1em;
+      align-self: flex-end;
+      position: relative;
+      bottom: 0.1em; /* tweak vertical alignment */
     }
 
     #podcast {
       margin-top: 10px;
       font-size: 6vw;
+      font-family: sans-serif;
       display: none;
-      font-family: sans-serif !important; /* podcast title always sans-serif */
     }
 
     .controls {
@@ -147,7 +152,12 @@
 <body>
 
   <div id="recording">RECORDING</div>
-  <div id="time">00:00<small>.00</small></div>
+
+  <!-- Time display -->
+  <div id="time">
+    <span id="mainTime">00:00</span><span id="milliseconds">.00</span>
+  </div>
+
   <div id="podcast"></div>
 
   <div class="controls" id="controlsPanel">
@@ -159,7 +169,7 @@
       <button onclick="goFullScreen()">Fullscreen</button>
       <button onclick="bigger()">A+</button>
       <button onclick="smaller()">A-</button>
-      <button onclick="toggleMode()">Toggle ms/hh</button>
+      <button onclick="toggleMs()" id="toggleMsBtn">Hide ms</button>
     </div>
 
     <div class="colors" id="colorPanel">
@@ -176,56 +186,52 @@
       <input type="text" id="podcastName" placeholder="Podcast Name" oninput="updatePodcastName()">
       <div class="fonts">
         <select id="fontSelect" onchange="changeFont(this.value)">
+          <option value="'Technology', sans-serif">Technology</option>
+          <option value="'Digital-7', monospace">Digital-7</option>
           <option value="'Roboto', sans-serif">Roboto</option>
-          <option value="'Montserrat', sans-serif">Montserrat</option>
-          <option value="'Digital-7', 'Roboto', sans-serif">Digital-7</option>
-          <option value="'Technology', 'Roboto', sans-serif">Technology</option>
-          <option value="sans-serif">Sans-Serif</option>
+          <option value="'Montserrat', sans-serif">Montserrat</option> 
         </select>
       </div>
     </div>
   </div>
 
   <script>
-    let timer = null, startTime = null, elapsed = 0;
+    let timer = null, milliseconds = 0, seconds = 0;
     let fontSize = 20;
+    let showMs = true;
     let currentPodcast = "";
-    let showMilliseconds = true; // toggle mode
-
-    function formatTime(ms) {
-      let totalSeconds = Math.floor(ms / 1000);
-      let hrs = Math.floor(totalSeconds / 3600);
-      let mins = Math.floor((totalSeconds % 3600) / 60);
-      let secs = totalSeconds % 60;
-      let centis = Math.floor((ms % 1000) / 10); // two digits
-
-      if (hrs > 0 || !showMilliseconds) {
-        // hh:mm:ss
-        return `${String(hrs).padStart(2,'0')}:${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
-      } else {
-        // mm:ss.ms
-        return `${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}<small>.${String(centis).padStart(2,'0')}</small>`;
-      }
-    }
 
     function update() {
-      let now = Date.now();
-      elapsed = now - startTime;
-      document.getElementById("time").innerHTML = formatTime(elapsed);
+      let mins = String(Math.floor(seconds / 60) % 60).padStart(2, '0');
+      let secs = String(seconds % 60).padStart(2, '0');
+      let hrs = Math.floor(seconds / 3600);
+
+      if (hrs >= 1 || !showMs) {
+        document.getElementById("mainTime").textContent = 
+          String(hrs).padStart(2, '0') + ":" + mins + ":" + secs;
+        document.getElementById("milliseconds").style.display = "none";
+      } else {
+        document.getElementById("mainTime").textContent = mins + ":" + secs;
+        document.getElementById("milliseconds").textContent = "." + String(milliseconds).padStart(2, '0');
+        document.getElementById("milliseconds").style.display = "inline-block";
+      }
     }
 
     function togglePlayStop() {
-      if (timer) {
-        stop();
-      } else {
-        start();
-      }
+      if (timer) stop();
+      else start();
     }
 
     function start() {
       if (!timer) {
-        startTime = Date.now() - elapsed;
-        timer = setInterval(update, 30);
+        timer = setInterval(() => {
+          milliseconds += 1;
+          if (milliseconds >= 100) {
+            milliseconds = 0;
+            seconds++;
+          }
+          update();
+        }, 10);
         document.getElementById("recording").style.display = "block";
         document.getElementById("playStop").textContent = "Stop";
         document.getElementById("secondaryControls").style.display = "none";
@@ -250,8 +256,9 @@
 
     function reset() {
       stop();
-      elapsed = 0;
-      document.getElementById("time").innerHTML = formatTime(elapsed);
+      seconds = 0;
+      milliseconds = 0;
+      update();
     }
 
     function goFullScreen() {
@@ -265,19 +272,6 @@
       const timeEl = document.getElementById("time");
       timeEl.style.fontSize = fontSize + "vw";
 
-      if (fontSize > 25) {
-        timeEl.style.letterSpacing = "0em";
-        timeEl.style.lineHeight = "0.9";
-      } 
-      if (fontSize > 30) {
-        timeEl.style.letterSpacing = "-0.05em";
-        timeEl.style.lineHeight = "0.85";
-      } 
-      if (fontSize <= 25) {
-        timeEl.style.letterSpacing = "0.05em";
-        timeEl.style.lineHeight = "1";
-      }
-
       while (timeEl.scrollWidth > window.innerWidth - 10) {
         fontSize -= 1;
         timeEl.style.fontSize = fontSize + "vw";
@@ -285,13 +279,13 @@
     }
 
     function bigger() {
-      fontSize += 5;
+      fontSize += 2;
       applyClockSizing();
     }
 
     function smaller() {
       if(fontSize > 5) {
-        fontSize -= 5;
+        fontSize -= 2;
         applyClockSizing();
       }
     }
@@ -309,14 +303,15 @@
       document.getElementById("podcast").textContent = currentPodcast;
     }
 
-    function toggleMode() {
-      showMilliseconds = !showMilliseconds;
-      document.getElementById("time").innerHTML = formatTime(elapsed);
+    function toggleMs() {
+      showMs = !showMs;
+      document.getElementById("toggleMsBtn").textContent = showMs ? "Hide ms" : "Show ms";
+      update();
     }
 
     window.addEventListener("resize", applyClockSizing);
 
-    document.getElementById("time").innerHTML = formatTime(elapsed);
+    update();
     applyClockSizing();
   </script>
 </body>
