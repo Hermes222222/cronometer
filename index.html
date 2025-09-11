@@ -1,11 +1,11 @@
+
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
   <title>Chronometer</title>
   <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@700&family=Montserrat:wght@400&display=swap" rel="stylesheet">
-  
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@700&family=Roboto+Mono:wght@700&family=Montserrat:wght@400&display=swap" rel="stylesheet">
   <!-- Local fonts (place .ttf files in fonts/ folder at repo root) -->
   <style>
     @font-face {
@@ -15,7 +15,6 @@
       font-style: normal;
       font-display: swap;
     }
-
     @font-face {
       font-family: 'Technology';
       src: url('fonts/technology.ttf') format('truetype');
@@ -23,7 +22,6 @@
       font-style: normal;
       font-display: swap;
     }
-
     html, body {
       height: 100%;
       margin: 0;
@@ -36,11 +34,9 @@
       font-family: 'Roboto', sans-serif;
       transition: margin-top 0.3s ease;
     }
-
     body.running-mode {
       margin-top: 100px;
     }
-
     #recording {
       margin-top: 20px;
       font-size: 5vw;
@@ -48,7 +44,6 @@
       color: red;
       display: none;
     }
-
     #time {
       display: inline-flex;
       align-items: flex-end; /* align bottom */
@@ -61,19 +56,30 @@
       white-space: nowrap;
       position: relative;
     }
-
     #mainTime {
       display: inline-block;
+      text-align: right; /* Ensure consistent alignment */
+      min-width: 3.5ch; /* Fixed width for "00:00" format */
     }
-
-    /* Fixed-width milliseconds to prevent jitter */
     #milliseconds {
       font-size: 30%;
       margin-left: 0.1em;
       align-self: flex-end;
+      position: relative;
+      bottom: 0.1em;
+      min-width: 2.5ch; /* Fixed width for ".00" format */
+      text-align: left; /* Ensure consistent alignment */
+    }
+    /* Add a wrapper to enforce monospace for consistent digit width */
+    .digit {
       display: inline-block;
-      min-width: 1.5em;   /* reserve enough space for 2 digits with current font */
-      text-align: left;
+      width: 1ch;
+      text-align: center;
+    }
+    .colon {
+      display: inline-block;
+      width: 0.5ch;
+      text-align: center;
     }
     #podcast {
       margin-top: 10px;
@@ -81,7 +87,6 @@
       font-family: sans-serif !important;
       display: none;
     }
-
     .controls {
       margin-top: 20px;
       display: grid;
@@ -90,7 +95,6 @@
       justify-content: center;
       align-items: flex-start;
     }
-
     #playStop {
       font-size: 2em;
       padding: 25px 50px;
@@ -101,7 +105,6 @@
       cursor: pointer;
     }
     #playStop:hover { background: #666; }
-
     .secondary-controls {
       display: grid;
       grid-template-columns: repeat(2, auto);
@@ -117,7 +120,6 @@
       cursor: pointer;
     }
     .secondary-controls button:hover { background: #555; }
-
     .colors {
       display: grid;
       grid-template-columns: repeat(3, auto);
@@ -131,7 +133,6 @@
       border: 2px solid white;
       cursor: pointer;
     }
-
     .podcast-input {
       display: flex;
       flex-direction: column;
@@ -155,18 +156,13 @@
   </style>
 </head>
 <body>
-
   <div id="recording">RECORDING</div>
-
   <div id="time">
     <span id="mainTime">00:00</span><span id="milliseconds">.00</span>
   </div>
-
   <div id="podcast"></div>
-
   <div class="controls" id="controlsPanel">
     <button id="playStop" onclick="togglePlayStop()">Play</button>
-
     <div class="secondary-controls" id="secondaryControls">
       <button onclick="reset()">Reset</button>
       <button onclick="goFullScreen()">Fullscreen</button>
@@ -174,7 +170,6 @@
       <button onclick="smaller()">A-</button>
       <button onclick="toggleMs()" id="toggleMsBtn">Hide ms</button>
     </div>
-
     <div class="colors" id="colorPanel">
       <button class="color-btn" style="background: white;" onclick="changeColor('white')"></button>
       <button class="color-btn" style="background: cyan;" onclick="changeColor('cyan')"></button>
@@ -184,12 +179,12 @@
       <button class="color-btn" style="background: lime;" onclick="changeColor('lime')"></button>
       <button class="color-btn" style="background: red;" onclick="changeColor('red')"></button>
     </div>
-
     <div class="podcast-input" id="podcastInput">
       <input type="text" id="podcastName" placeholder="Podcast Name" oninput="updatePodcastName()">
       <div class="fonts">
         <select id="fontSelect" onchange="changeFont(this.value)">
           <option value="'Roboto', sans-serif">Roboto</option>
+          <option value="'Roboto Mono', monospace">Roboto Mono</option>
           <option value="'Montserrat', sans-serif">Montserrat</option>
           <option value="'Digital-7', monospace">Digital-7</option>
           <option value="'Technology', sans-serif">Technology</option>
@@ -198,7 +193,6 @@
       </div>
     </div>
   </div>
-
   <script>
     let timer = null, milliseconds = 0, seconds = 0;
     let fontSize = 20;
@@ -209,14 +203,15 @@
       let mins = String(Math.floor(seconds / 60) % 60).padStart(2,'0');
       let secs = String(seconds % 60).padStart(2,'0');
       let hrs = Math.floor(seconds / 3600);
-
+      let msStr = String(milliseconds).padStart(2,'0');
+      
       if (hrs >= 1 || !showMs) {
         document.getElementById("mainTime").textContent = 
           String(hrs).padStart(2,'0') + ":" + mins + ":" + secs;
         document.getElementById("milliseconds").style.display = "none";
       } else {
         document.getElementById("mainTime").textContent = mins + ":" + secs;
-        document.getElementById("milliseconds").textContent = "." + String(milliseconds).padStart(2,'0');
+        document.getElementById("milliseconds").textContent = "." + msStr;
         document.getElementById("milliseconds").style.display = "inline-block";
       }
     }
@@ -313,9 +308,9 @@
     }
 
     window.addEventListener("resize", applyClockSizing);
-
     update();
     applyClockSizing();
   </script>
 </body>
 </html>
+
