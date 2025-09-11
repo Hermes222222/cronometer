@@ -8,7 +8,6 @@
   
   <!-- Local fonts (place .ttf files in fonts/ folder at repo root) -->
   <style>
-    /* load local fonts first (fonts/ folder) */
     @font-face {
       font-family: 'Digital-7';
       src: url('fonts/digital-7.ttf') format('truetype');
@@ -25,7 +24,6 @@
       font-display: swap;
     }
 
-    /* --- page styles (unchanged except font loading) --- */
     html, body {
       height: 100%;
       margin: 0;
@@ -39,7 +37,6 @@
       transition: margin-top 0.3s ease;
     }
 
-    /* when running, shift content down */
     body.running-mode {
       margin-top: 100px;
     }
@@ -63,11 +60,16 @@
       text-overflow: clip;
     }
 
+    #time small {
+      font-size: 40%;
+      vertical-align: top;
+    }
+
     #podcast {
       margin-top: 10px;
       font-size: 6vw;
-      font-family: sans-serif;
       display: none;
+      font-family: sans-serif !important; /* podcast title always sans-serif */
     }
 
     .controls {
@@ -145,7 +147,7 @@
 <body>
 
   <div id="recording">RECORDING</div>
-  <div id="time">00:00:00</div>
+  <div id="time">00:00<small>.00</small></div>
   <div id="podcast"></div>
 
   <div class="controls" id="controlsPanel">
@@ -157,6 +159,7 @@
       <button onclick="goFullScreen()">Fullscreen</button>
       <button onclick="bigger()">A+</button>
       <button onclick="smaller()">A-</button>
+      <button onclick="toggleMode()">Toggle ms/hh</button>
     </div>
 
     <div class="colors" id="colorPanel">
@@ -173,7 +176,6 @@
       <input type="text" id="podcastName" placeholder="Podcast Name" oninput="updatePodcastName()">
       <div class="fonts">
         <select id="fontSelect" onchange="changeFont(this.value)">
-          <!-- only the five fonts requested -->
           <option value="'Roboto', sans-serif">Roboto</option>
           <option value="'Montserrat', sans-serif">Montserrat</option>
           <option value="'Digital-7', 'Roboto', sans-serif">Digital-7</option>
@@ -185,15 +187,31 @@
   </div>
 
   <script>
-    let timer = null, seconds = 0;
+    let timer = null, startTime = null, elapsed = 0;
     let fontSize = 20;
     let currentPodcast = "";
+    let showMilliseconds = true; // toggle mode
+
+    function formatTime(ms) {
+      let totalSeconds = Math.floor(ms / 1000);
+      let hrs = Math.floor(totalSeconds / 3600);
+      let mins = Math.floor((totalSeconds % 3600) / 60);
+      let secs = totalSeconds % 60;
+      let centis = Math.floor((ms % 1000) / 10); // two digits
+
+      if (hrs > 0 || !showMilliseconds) {
+        // hh:mm:ss
+        return `${String(hrs).padStart(2,'0')}:${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+      } else {
+        // mm:ss.ms
+        return `${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}<small>.${String(centis).padStart(2,'0')}</small>`;
+      }
+    }
 
     function update() {
-      let hrs = String(Math.floor(seconds / 3600)).padStart(2, '0');
-      let mins = String(Math.floor((seconds % 3600) / 60)).padStart(2, '0');
-      let secs = String(seconds % 60).padStart(2, '0');
-      document.getElementById("time").textContent = `${hrs}:${mins}:${secs}`;
+      let now = Date.now();
+      elapsed = now - startTime;
+      document.getElementById("time").innerHTML = formatTime(elapsed);
     }
 
     function togglePlayStop() {
@@ -206,15 +224,14 @@
 
     function start() {
       if (!timer) {
-        timer = setInterval(() => { seconds++; update(); }, 1000);
+        startTime = Date.now() - elapsed;
+        timer = setInterval(update, 30);
         document.getElementById("recording").style.display = "block";
         document.getElementById("playStop").textContent = "Stop";
-        // hide other controls but keep play/stop
         document.getElementById("secondaryControls").style.display = "none";
         document.getElementById("colorPanel").style.display = "none";
         document.getElementById("podcastInput").style.display = "none";
         if(currentPodcast.trim() !== "") document.getElementById("podcast").style.display = "block";
-        // shift layout down
         document.body.classList.add("running-mode");
       }
     }
@@ -224,19 +241,17 @@
       timer = null;
       document.getElementById("recording").style.display = "none";
       document.getElementById("playStop").textContent = "Play";
-      // restore controls
       document.getElementById("secondaryControls").style.display = "grid";
       document.getElementById("colorPanel").style.display = "grid";
       document.getElementById("podcastInput").style.display = "flex";
       document.getElementById("podcast").style.display = "none";
-      // reset layout shift
       document.body.classList.remove("running-mode");
     }
 
     function reset() {
       stop();
-      seconds = 0;
-      update();
+      elapsed = 0;
+      document.getElementById("time").innerHTML = formatTime(elapsed);
     }
 
     function goFullScreen() {
@@ -246,7 +261,6 @@
       else if (el.msRequestFullscreen) el.msRequestFullscreen();
     }
 
-    // ---- Adaptive sizing to prevent overflow ----
     function applyClockSizing() {
       const timeEl = document.getElementById("time");
       timeEl.style.fontSize = fontSize + "vw";
@@ -288,8 +302,6 @@
 
     function changeFont(font) {
       document.getElementById("time").style.fontFamily = font;
-      // also apply to podcast text so it matches the clock
-      document.getElementById("podcast").style.fontFamily = font;
     }
 
     function updatePodcastName() {
@@ -297,9 +309,14 @@
       document.getElementById("podcast").textContent = currentPodcast;
     }
 
+    function toggleMode() {
+      showMilliseconds = !showMilliseconds;
+      document.getElementById("time").innerHTML = formatTime(elapsed);
+    }
+
     window.addEventListener("resize", applyClockSizing);
 
-    update();
+    document.getElementById("time").innerHTML = formatTime(elapsed);
     applyClockSizing();
   </script>
 </body>
