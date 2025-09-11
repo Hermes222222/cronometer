@@ -6,16 +6,22 @@
   <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@700&family=Montserrat:wght@400&display=swap" rel="stylesheet">
   
-  <!-- Local fonts (place .ttf files in same folder as this HTML) -->
+  <!-- Local fonts (place .ttf files in fonts/ folder at repo root) -->
   <style>
     @font-face {
       font-family: 'Digital-7';
-      src: url('digital-7.ttf') format('truetype');
+      src: url('fonts/digital-7.ttf') format('truetype');
+      font-weight: normal;
+      font-style: normal;
+      font-display: swap;
     }
 
     @font-face {
       font-family: 'Technology';
-      src: url('technology.ttf') format('truetype');
+      src: url('fonts/technology.ttf') format('truetype');
+      font-weight: normal;
+      font-style: normal;
+      font-display: swap;
     }
 
     html, body {
@@ -31,7 +37,6 @@
       transition: margin-top 0.3s ease;
     }
 
-    /* when running, shift content down */
     body.running-mode {
       margin-top: 100px;
     }
@@ -44,10 +49,9 @@
       display: none;
     }
 
-    /* clock wrapper */
     #time {
       display: inline-flex;
-      align-items: flex-end; /* align numbers at the bottom */
+      align-items: flex-end; /* align bottom */
       font-size: 20vw;
       margin-top: 8vh;
       font-family: 'Roboto', sans-serif;
@@ -63,17 +67,17 @@
     }
 
     #milliseconds {
-      font-size: 30%; /* always smaller */
+      font-size: 30%;
       margin-left: 0.1em;
       align-self: flex-end;
       position: relative;
-      bottom: 0.1em; /* tweak vertical alignment */
+      bottom: 0.1em;
     }
 
     #podcast {
       margin-top: 10px;
       font-size: 6vw;
-      font-family: sans-serif;
+      font-family: sans-serif !important;
       display: none;
     }
 
@@ -153,7 +157,6 @@
 
   <div id="recording">RECORDING</div>
 
-  <!-- Time display -->
   <div id="time">
     <span id="mainTime">00:00</span><span id="milliseconds">.00</span>
   </div>
@@ -161,7 +164,6 @@
   <div id="podcast"></div>
 
   <div class="controls" id="controlsPanel">
-    <!-- Play/Stop always visible -->
     <button id="playStop" onclick="togglePlayStop()">Play</button>
 
     <div class="secondary-controls" id="secondaryControls">
@@ -186,10 +188,11 @@
       <input type="text" id="podcastName" placeholder="Podcast Name" oninput="updatePodcastName()">
       <div class="fonts">
         <select id="fontSelect" onchange="changeFont(this.value)">
-          <option value="'Technology', sans-serif">Technology</option>
-          <option value="'Digital-7', monospace">Digital-7</option>
           <option value="'Roboto', sans-serif">Roboto</option>
-          <option value="'Montserrat', sans-serif">Montserrat</option> 
+          <option value="'Montserrat', sans-serif">Montserrat</option>
+          <option value="'Digital-7', monospace">Digital-7</option>
+          <option value="'Technology', sans-serif">Technology</option>
+          <option value="sans-serif">Sans-Serif</option>
         </select>
       </div>
     </div>
@@ -202,17 +205,17 @@
     let currentPodcast = "";
 
     function update() {
-      let mins = String(Math.floor(seconds / 60) % 60).padStart(2, '0');
-      let secs = String(seconds % 60).padStart(2, '0');
+      let mins = String(Math.floor(seconds / 60) % 60).padStart(2,'0');
+      let secs = String(seconds % 60).padStart(2,'0');
       let hrs = Math.floor(seconds / 3600);
 
       if (hrs >= 1 || !showMs) {
         document.getElementById("mainTime").textContent = 
-          String(hrs).padStart(2, '0') + ":" + mins + ":" + secs;
+          String(hrs).padStart(2,'0') + ":" + mins + ":" + secs;
         document.getElementById("milliseconds").style.display = "none";
       } else {
         document.getElementById("mainTime").textContent = mins + ":" + secs;
-        document.getElementById("milliseconds").textContent = "." + String(milliseconds).padStart(2, '0');
+        document.getElementById("milliseconds").textContent = "." + String(milliseconds).padStart(2,'0');
         document.getElementById("milliseconds").style.display = "inline-block";
       }
     }
@@ -271,7 +274,6 @@
     function applyClockSizing() {
       const timeEl = document.getElementById("time");
       timeEl.style.fontSize = fontSize + "vw";
-
       while (timeEl.scrollWidth > window.innerWidth - 10) {
         fontSize -= 1;
         timeEl.style.fontSize = fontSize + "vw";
