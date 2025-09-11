@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <title>Chronometer</title>
   <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@700&family=Roboto+Mono:wght@700&family=Montserrat:wght@400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@700&family=Montserrat:wght@400&display=swap" rel="stylesheet">
   <!-- Local fonts (place .ttf files in fonts/ folder at repo root) -->
   <style>
     @font-face {
@@ -45,35 +45,53 @@
       display: none;
     }
     #time {
-      position: relative;       /* parent for absolute positioning */
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
       font-size: 20vw;
       margin-top: 8vh;
-      display: inline-block;
-      font-family: 'Roboto', sans-serif; /* will be overridden by font switcher */
+      font-family: 'Roboto', sans-serif;
+      line-height: 1;
+      letter-spacing: 0.05em;
+      overflow: hidden;
+      white-space: nowrap;
+      position: relative;
     }
-    
-    #mainTime {
-      display: inline-block;
+    /* Create stable width containers regardless of font */
+    #timeContainer {
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      position: relative;
     }
-    
-    #milliseconds {
+    /* Create a fixed static display that always shows all possible characters */
+    #staticDisplay {
+      visibility: hidden;
       position: absolute;
-      bottom: 0;                /* align baseline with mainTime */
-      left: 100%;               /* place it right next to mainTime */
+      display: flex;
+      left: 0;
+      top: 0;
+      pointer-events: none;
+      height: 0;
+      overflow: hidden;
+    }
+    /* Ensure fixed widths for all character positions */
+    .digit-container {
+      display: inline-block;
+      text-align: center;
+    }
+    /* Main time stable layout */
+    #mainTimeContainer {
+      display: flex;
+    }
+    /* Milliseconds stable layout */
+    #millisecondsContainer {
+      display: flex;
       font-size: 30%;
-      margin-left: 0.05em;
-      display: inline-block;
-    }
-    /* Add a wrapper to enforce monospace for consistent digit width */
-    .digit {
-      display: inline-block;
-      width: 1ch;
-      text-align: center;
-    }
-    .colon {
-      display: inline-block;
-      width: 0.5ch;
-      text-align: center;
+      align-self: flex-end;
+      position: relative;
+      bottom: 0.1em;
+      margin-left: 0.1em;
     }
     #podcast {
       margin-top: 10px;
@@ -152,7 +170,26 @@
 <body>
   <div id="recording">RECORDING</div>
   <div id="time">
-    <span id="mainTime">00:00</span><span id="milliseconds">.00</span>
+    <!-- Static reference display with every possible digit to establish widths -->
+    <div id="staticDisplay">
+      <div class="digit-container">0</div>
+      <div class="digit-container">1</div>
+      <div class="digit-container">2</div>
+      <div class="digit-container">3</div>
+      <div class="digit-container">4</div>
+      <div class="digit-container">5</div>
+      <div class="digit-container">6</div>
+      <div class="digit-container">7</div>
+      <div class="digit-container">8</div>
+      <div class="digit-container">9</div>
+      <div class="digit-container">:</div>
+      <div class="digit-container">.</div>
+    </div>
+    <!-- Actual visible display using individual containers for each digit -->
+    <div id="timeContainer">
+      <div id="mainTimeContainer"></div>
+      <div id="millisecondsContainer"></div>
+    </div>
   </div>
   <div id="podcast"></div>
   <div class="controls" id="controlsPanel">
@@ -178,7 +215,6 @@
       <div class="fonts">
         <select id="fontSelect" onchange="changeFont(this.value)">
           <option value="'Roboto', sans-serif">Roboto</option>
-          <option value="'Roboto Mono', monospace">Roboto Mono</option>
           <option value="'Montserrat', sans-serif">Montserrat</option>
           <option value="'Digital-7', monospace">Digital-7</option>
           <option value="'Technology', sans-serif">Technology</option>
@@ -193,20 +229,103 @@
     let showMs = true;
     let currentPodcast = "";
 
+    // Create individual elements for each digit position
+    function createDigitElements() {
+      const mainTimeContainer = document.getElementById("mainTimeContainer");
+      const millisecondsContainer = document.getElementById("millisecondsContainer");
+      
+      // Clear existing content
+      mainTimeContainer.innerHTML = '';
+      millisecondsContainer.innerHTML = '';
+      
+      // Create main time digit positions (00:00 or 00:00:00 format)
+      for (let i = 0; i < 5; i++) {
+        const digitEl = document.createElement("div");
+        digitEl.className = "digit-container";
+        digitEl.id = "main-digit-" + i;
+        if (i === 2) {
+          digitEl.textContent = ":"; // Colon position
+        } else {
+          digitEl.textContent = "0"; // Number position
+        }
+        mainTimeContainer.appendChild(digitEl);
+      }
+      
+      // Create milliseconds digit positions (.00 format)
+      const dotEl = document.createElement("div");
+      dotEl.className = "digit-container";
+      dotEl.textContent = ".";
+      millisecondsContainer.appendChild(dotEl);
+      
+      for (let i = 0; i < 2; i++) {
+        const digitEl = document.createElement("div");
+        digitEl.className = "digit-container";
+        digitEl.id = "ms-digit-" + i;
+        digitEl.textContent = "0";
+        millisecondsContainer.appendChild(digitEl);
+      }
+    }
+
     function update() {
       let mins = String(Math.floor(seconds / 60) % 60).padStart(2,'0');
       let secs = String(seconds % 60).padStart(2,'0');
       let hrs = Math.floor(seconds / 3600);
       let msStr = String(milliseconds).padStart(2,'0');
       
+      const mainTimeContainer = document.getElementById("mainTimeContainer");
+      const millisecondsContainer = document.getElementById("millisecondsContainer");
+      
+      // First, make sure we have the right number of digits created
       if (hrs >= 1 || !showMs) {
-        document.getElementById("mainTime").textContent = 
-          String(hrs).padStart(2,'0') + ":" + mins + ":" + secs;
-        document.getElementById("milliseconds").style.display = "none";
+        // Format: 00:00:00
+        while (mainTimeContainer.children.length < 8) {
+          // Add the hour digits and another colon if not already present
+          const hourPrefixEl = document.createElement("div");
+          hourPrefixEl.className = "digit-container";
+          hourPrefixEl.id = "main-digit-hours-" + (mainTimeContainer.children.length - 5);
+          hourPrefixEl.textContent = "0";
+          mainTimeContainer.insertBefore(hourPrefixEl, mainTimeContainer.firstChild);
+          
+          if (mainTimeContainer.children.length === 7) {
+            const colonEl = document.createElement("div");
+            colonEl.className = "digit-container";
+            colonEl.textContent = ":";
+            mainTimeContainer.insertBefore(colonEl, mainTimeContainer.children[2]);
+          }
+        }
+        millisecondsContainer.style.display = "none";
       } else {
-        document.getElementById("mainTime").textContent = mins + ":" + secs;
-        document.getElementById("milliseconds").textContent = "." + msStr;
-        document.getElementById("milliseconds").style.display = "inline-block";
+        // Format: 00:00
+        while (mainTimeContainer.children.length > 5) {
+          mainTimeContainer.removeChild(mainTimeContainer.firstChild);
+        }
+        millisecondsContainer.style.display = "flex";
+      }
+      
+      // Now update the actual digits without changing the structure
+      if (hrs >= 1 || !showMs) {
+        // Format: 00:00:00
+        const hrsStr = String(hrs).padStart(2,'0');
+        const timeStr = hrsStr + ":" + mins + ":" + secs;
+        
+        let digitIndex = 0;
+        for (let i = 0; i < timeStr.length; i++) {
+          const digitEl = mainTimeContainer.children[i];
+          digitEl.textContent = timeStr[i];
+        }
+      } else {
+        // Format: 00:00
+        const timeStr = mins + ":" + secs;
+        
+        let digitIndex = 0;
+        for (let i = 0; i < timeStr.length; i++) {
+          const digitEl = mainTimeContainer.children[i];
+          digitEl.textContent = timeStr[i];
+        }
+        
+        // Update milliseconds
+        document.getElementById("ms-digit-0").textContent = msStr[0];
+        document.getElementById("ms-digit-1").textContent = msStr[1];
       }
     }
 
@@ -288,6 +407,8 @@
 
     function changeFont(font) {
       document.getElementById("time").style.fontFamily = font;
+      // When font changes, we need to recalculate digit positions
+      setTimeout(applyClockSizing, 10); // Give time for font to load
     }
 
     function updatePodcastName() {
@@ -302,8 +423,13 @@
     }
 
     window.addEventListener("resize", applyClockSizing);
-    update();
-    applyClockSizing();
+    
+    // Initialize digit containers on load
+    window.addEventListener("load", function() {
+      createDigitElements();
+      update();
+      applyClockSizing();
+    });
   </script>
 </body>
 </html>
