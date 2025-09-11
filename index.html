@@ -11,14 +11,10 @@
 @font-face {
   font-family: 'Digital-7';
   src: url('fonts/digital-7.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
 }
 @font-face {
   font-family: 'Technology';
   src: url('fonts/technology.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
 }
 
 html, body {
@@ -28,6 +24,7 @@ html, body {
   color: white;
   text-align: center;
   font-family: 'Roboto', sans-serif;
+  overflow: hidden;
 }
 
 body.running-mode {
@@ -53,9 +50,7 @@ body.running-mode {
   white-space: nowrap;
 }
 
-#mainTime {
-  display: inline-block;
-}
+#mainTime { display: inline-block; }
 
 #milliseconds {
   position: absolute;
@@ -77,14 +72,16 @@ body.running-mode {
   margin-top: 20px;
 }
 
-.button-group {
+.button-column {
   display: inline-block;
-  margin: 5px;
+  vertical-align: top;
+  margin: 5px 15px;
+  text-align: center;
 }
 
 #playStop {
   font-size: 2em;
-  padding: 25px 50px;
+  padding: 20px 40px;
   border: none;
   border-radius: 12px;
   background: #444;
@@ -94,17 +91,13 @@ body.running-mode {
 
 #playStop:hover { background: #666; }
 
-.secondary-controls button, .colors button, .fonts select, .podcast-input input {
+.button-column button, .button-column select, .button-column input {
   font-size: 1em;
   margin: 5px;
-  padding: 8px;
+  padding: 10px;
   border-radius: 6px;
   border: none;
   cursor: pointer;
-}
-
-.colors {
-  margin-top: 10px;
 }
 
 .color-btn {
@@ -113,11 +106,10 @@ body.running-mode {
   border-radius: 50%;
   border: 2px solid white;
   display: inline-block;
+  margin: 2px;
 }
 
-.podcast-input {
-  margin-top: 10px;
-}
+.podcast-input input { width: 140px; text-align: center; }
 
 </style>
 </head>
@@ -133,19 +125,23 @@ body.running-mode {
 <div id="podcast"></div>
 
 <div class="controls">
-  <div class="button-group">
+
+  <!-- Column 1: Play/Stop -->
+  <div class="button-column">
     <button id="playStop" onclick="togglePlayStop()">Play</button>
   </div>
 
-  <div class="button-group" id="secondaryControls">
+  <!-- Column 2: Secondary controls -->
+  <div class="button-column" id="secondaryControls">
     <button onclick="resetTimer()">Reset</button>
-    <button onclick="goFullScreen()">Fullscreen</button>
+    <button onclick="simulateFullScreen()">Fullscreen</button>
     <button onclick="bigger()">A+</button>
     <button onclick="smaller()">A-</button>
     <button onclick="toggleMs()" id="toggleMsBtn">Hide ms</button>
   </div>
 
-  <div class="button-group colors" id="colorPanel">
+  <!-- Column 3: Colors -->
+  <div class="button-column colors" id="colorPanel">
     <div class="color-btn" style="background:white;" onclick="changeColor('white')"></div>
     <div class="color-btn" style="background:cyan;" onclick="changeColor('cyan')"></div>
     <div class="color-btn" style="background:magenta;" onclick="changeColor('magenta')"></div>
@@ -155,7 +151,8 @@ body.running-mode {
     <div class="color-btn" style="background:red;" onclick="changeColor('red')"></div>
   </div>
 
-  <div class="button-group podcast-input" id="podcastInput">
+  <!-- Column 4: Podcast and Fonts -->
+  <div class="button-column podcast-input" id="podcastInput">
     <input type="text" id="podcastName" placeholder="Podcast Name" oninput="updatePodcast()">
     <select id="fontSelect" onchange="changeFont(this.value)">
       <option value="'Roboto', sans-serif">Roboto</option>
@@ -165,6 +162,7 @@ body.running-mode {
       <option value="sans-serif">Sans-Serif</option>
     </select>
   </div>
+
 </div>
 
 <script>
@@ -209,9 +207,9 @@ function startTimer(){
     },10);
     document.getElementById("recording").style.display="block";
     document.getElementById("playStop").innerHTML="Stop";
-    document.getElementById("secondaryControls").style.display="none";
-    document.getElementById("colorPanel").style.display="none";
-    document.getElementById("podcastInput").style.display="none";
+    document.getElementById("secondaryControls").style.display="inline-block";
+    document.getElementById("colorPanel").style.display="inline-block";
+    document.getElementById("podcastInput").style.display="inline-block";
     if(currentPodcast.trim()!=="") document.getElementById("podcast").style.display="block";
     document.body.className+=" running-mode";
   }
@@ -235,15 +233,18 @@ function resetTimer(){
   update();
 }
 
-function goFullScreen(){
-  var el=document.documentElement;
-  if(el.requestFullscreen) el.requestFullscreen();
-  else if(el.webkitRequestFullscreen) el.webkitRequestFullscreen();
-  else if(el.msRequestFullscreen) el.msRequestFullscreen();
+function simulateFullScreen(){
+  // iOS 9 cannot use requestFullscreen, simulate by maximizing body
+  document.body.style.width="100%";
+  document.body.style.height="100%";
+  document.body.style.margin="0";
+  document.body.style.padding="0";
+  document.documentElement.style.width="100%";
+  document.documentElement.style.height="100%";
 }
 
-function bigger(){ fontSize+=2; applyFontSize();}
-function smaller(){ if(fontSize>5){fontSize-=2; applyFontSize();}}
+function bigger(){ fontSize+=2; applyFontSize(); }
+function smaller(){ if(fontSize>5){ fontSize-=2; applyFontSize(); }}
 function applyFontSize(){ document.getElementById("time").style.fontSize=fontSize+"vw"; }
 
 function changeColor(c){ document.getElementById("time").style.color=c; }
