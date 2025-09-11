@@ -66,15 +66,15 @@
       display: inline-block;
     }
 
+    /* Fixed-width milliseconds to prevent jitter */
     #milliseconds {
-      font-size: 30%;          /* smaller than main time */
+      font-size: 30%;          
       margin-left: 0.1em;
-      align-self: flex-end;    /* bottom alignment */
+      align-self: flex-end;    
       display: inline-block;   
-      width: 2ch;              /* fixed width to prevent jitter */
-      text-align: left;        /* keep digits left-aligned */
+      width: 2ch;              /* always space for 2 digits */
+      text-align: left;
     }
-
 
     #podcast {
       margin-top: 10px;
